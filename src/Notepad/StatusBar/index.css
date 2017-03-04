@@ -1,0 +1,13 @@
+.status-bar {
+  height: 32px;
+  max-height: 32px;
+  min-height: 32px;
+  background: lightslategrey;
+  color: black;
+  font-family: monospace;
+  font-size: 24px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 32px;
+  box-sizing: border-box;
+}

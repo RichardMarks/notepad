@@ -1,0 +1,4 @@
+.document-view {
+  flex-grow: 1;
+  box-shadow: inset 10px 10px 32px -12px rgba(0,0,0,0.4);
+}
