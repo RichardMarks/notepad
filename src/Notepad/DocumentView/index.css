@@ -1,4 +1,51 @@
 .document-view {
   flex-grow: 1;
   box-shadow: inset 10px 10px 32px -12px rgba(0,0,0,0.4);
+  font-family: monospace;
+  font-size: 18px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-view__line-number {
+  width: 32px;
+  border-right: 2px solid black;
+  background: rgba(0, 0, 0, 0.4);
+  text-align: right;
+  padding: 4px;
+  margin-right: 8px;
+  font-family: monospace;
+}
+
+.document-view__row {
+  display: flex;
+  line-height: 1.5
+}
+.document-view__row--highlight {
+  background: rgba(0, 255, 255, 0.2);
+}
+
+.document-view__column {
+  /*border: 1px solid red;*/
+  /*width: 16px;*/
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.document-view__cursor {
+  box-sizing: border-box;
+  border-left: 1px solid black;
+  /*animation: 0.9s blink step-end infinite;*/
+}
+
+
+@keyframes "blink" {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: black;
+  }
 }
