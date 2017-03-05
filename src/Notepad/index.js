@@ -143,9 +143,11 @@ export default class Notepad extends Component {
     if (isKey(KEY.END)) {
       event.preventDefault()
       cursorController.moveToEndOfLine()
+      updateCursor = true
     } else if (isKey(KEY.HOME)) {
       event.preventDefault()
       cursorController.moveToStartOfLine()
+      updateCursor = true
     } else if (isKey(KEY.LEFT)) {
       if (metaKey) {
         cursorController.moveToStartOfLine()
