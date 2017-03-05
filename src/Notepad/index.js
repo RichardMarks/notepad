@@ -61,6 +61,7 @@ export default class Notepad extends Component {
     this.insertCarriageReturn = this.insertCarriageReturn.bind(this)
     this.insertBackspace = this.insertBackspace.bind(this)
     this.insertCharacter = this.insertCharacter.bind(this)
+    this.insertDelete = this.insertDelete.bind(this)
 
     this.state = {
       documentCursor: CURSOR_HOME,
@@ -139,25 +140,77 @@ export default class Notepad extends Component {
   }
 
   insertCarriageReturn (documentCursor, documentContent) {
-    if (documentCursor.row === documentContent.length - 1) {
-      documentContent.push('FOP')
-      // this.moveDown(documentCursor, documentContent)
-      documentCursor.column = 0
+    const EMPTY_LINE = ''
+    const rowContent = documentContent[documentCursor.row]
+    const pre = rowContent.slice(0, documentCursor.column)
+    const post = rowContent.slice(documentCursor.column)
+
+    if (documentCursor.row === 0) {
+      // top row
+      documentContent.splice(0, 0, EMPTY_LINE)
+      documentCursor.row += 1
+    } else if (documentCursor.row < documentContent.length - 1) {
+      // middle rows
+      documentContent.splice(documentCursor.row, 0, EMPTY_LINE)
+      documentCursor.row += 1
     } else {
-      documentContent.splice(documentCursor.row + 1, 0, '')
+      // bottom row
+      documentContent.push(EMPTY_LINE)
+      documentCursor.row += 1
     }
+
+    if (documentCursor.column > 0 && rowContent.length > 0) {
+      documentContent[documentCursor.row - 1] = pre
+      documentContent[documentCursor.row] = post
+    }
+
+    documentCursor.column = 0
   }
 
   insertBackspace (documentCursor, documentContent) {
     const changeRow = changes => { documentContent[documentCursor.row] = changes }
 
+    const rowContent = documentContent[documentCursor.row]
+
     if (documentCursor.column > 0) {
       documentCursor.column -= 1
 
-      const rowContent = documentContent[documentCursor.row]
       const pre = rowContent.slice(0, documentCursor.column)
       const post = rowContent.slice(documentCursor.column + 1)
       changeRow(`${pre}${post}`)
+    } else {
+      if (documentContent.length > 2 && rowContent.length === 0) {
+        documentContent.splice(documentCursor.row, 1)
+        documentCursor.row -= 1
+        if (documentCursor.row < 0) {
+          documentCursor.row = 0
+        }
+      } else if (documentCursor.row > 0 && rowContent.length > 0) {
+        documentCursor.row -= 1
+        this.moveToEndOfLine(documentCursor, documentContent)
+
+        const rowAboveContent = documentContent[documentCursor.row]
+        changeRow(`${rowAboveContent}${rowContent}`)
+        documentContent.splice(documentCursor.row + 1, 1)
+      }
+    }
+  }
+
+  insertDelete (documentCursor, documentContent) {
+    const rowContent = documentContent[documentCursor.row]
+
+    const changeRow = changes => { documentContent[documentCursor.row] = changes }
+
+    const pre = rowContent.slice(0, documentCursor.column)
+    const post = rowContent.slice(documentCursor.column + 1)
+
+    if (post.length) {
+      changeRow(`${pre}${post}`)
+    } else if (documentCursor.row < documentContent.length - 1) {
+      const nextRowContent = documentContent[documentCursor.row + 1]
+
+      changeRow(`${rowContent}${nextRowContent}`)
+      documentContent.splice(documentCursor.row + 1, 1)
     }
   }
 
@@ -178,8 +231,8 @@ export default class Notepad extends Component {
   }
 
   onKeyPress (event) {
-    console.log('onKeyPress')
-    console.log({...event})
+    // console.log('onKeyPress')
+    // console.log({...event})
 
     const {
       // altKey,
@@ -219,8 +272,8 @@ export default class Notepad extends Component {
   }
 
   onKeyDown (event) {
-    console.log('onKeyDown')
-    console.log({...event})
+    // console.log('onKeyDown')
+    // console.log({...event})
     const documentCursor = {...this.state.documentCursor}
     const documentContent = this.state.documentContent.slice()
 
@@ -259,6 +312,11 @@ export default class Notepad extends Component {
     if (isKey(KEY.BACKSPACE)) {
       event.preventDefault()
       this.insertBackspace(documentCursor, documentContent)
+      updateCursor = true
+      updateDocument = true
+    } else if (isKey(KEY.DELETE)) {
+      event.preventDefault()
+      this.insertDelete(documentCursor, documentContent)
       updateCursor = true
       updateDocument = true
     } else if (isKey(KEY.END)) {
