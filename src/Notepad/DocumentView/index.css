@@ -20,13 +20,16 @@
 
 .document-view__row {
   display: flex;
-  line-height: 1.5
+  line-height: 1.5;
+  flex-wrap: wrap;
 }
 .document-view__row--highlight {
   background: rgba(0, 255, 255, 0.2);
 }
 
 .document-view__column {
+  box-sizing: border-box;
+  border: 1px solid transparent;
   /*border: 1px solid red;*/
   /*width: 16px;*/
   display: flex;

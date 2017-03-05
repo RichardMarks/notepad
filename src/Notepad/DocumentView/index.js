@@ -13,18 +13,24 @@ export default class DocumentView extends Component {
   renderContentRow (contentRow, row) {
     const { cursor } = this.props
 
+    const rowWithEOL = `${contentRow}${String.fromCharCode(0xA0)}`
+    let content = rowWithEOL.split('').map((contentColumn, column) => this.renderContentColumn(contentColumn, column, row))
+    if (contentRow.length === 0) {
+      content = this.renderContentColumn(' ', 0, row)
+    }
+
     if (cursor.row === row) {
       return (
         <div key={row} className='document-view__row document-view__row--highlight'>
           <div className='document-view__line-number'>{1 + row}</div>
-          {contentRow.split('').map((contentColumn, column) => this.renderContentColumn(contentColumn, column, row))}
+          {content}
         </div>
       )
     } else {
       return (
         <div key={row} className='document-view__row'>
           <div className='document-view__line-number'>{1 + row}</div>
-          {contentRow.split('').map((contentColumn, column) => this.renderContentColumn(contentColumn, column, row))}
+          {content}
         </div>
       )
     }

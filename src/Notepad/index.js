@@ -55,88 +55,131 @@ export default class Notepad extends Component {
     } = event
 
     const documentContent = this.state.documentContent.slice()
+    const documentCursor = {...this.state.documentCursor}
 
-    if (keyCode === 37) {
-      // left arrow
-      const documentCursor = {...this.state.documentCursor}
-
-      // move cursor left one space
-      documentCursor.column -= 1
-
-      // if off left
-      if (documentCursor.column < 0) {
-        // if we are not in the first row
-        if (documentCursor.row > 0) {
-          // move up a row
-          documentCursor.row -= 1
-          // move to end of line
-          documentCursor.column = documentContent[documentCursor.row].length - 1
+    const cursorController = {
+      moveToStartOfLine () {
+        documentCursor.column = 0
+      },
+      moveToEndOfLine () {
+        if (documentContent[documentCursor.row].length) {
+          documentCursor.column = documentContent[documentCursor.row].length
         } else {
           documentCursor.column = 0
         }
-      }
-
-
-      this.setState({ documentCursor })
-    } else if (keyCode === 39) {
-      // right arrow
-      const documentCursor = {...this.state.documentCursor}
-
-      // move cursor right one space
-      documentCursor.column += 1
-
-      // if off right
-      if (documentCursor.column > documentContent[documentCursor.row].length - 1) {
-        // if we are not in the last row
-        if (documentCursor.row < documentContent.length - 1) {
-          // move down a row
-          documentCursor.row += 1
-          // move to start of line
-          documentCursor.column = 0
-        } else {
-          documentCursor.column = documentContent[documentCursor.row].length - 1
-        }
-      }
-
-
-      this.setState({ documentCursor })
-    } else if (keyCode === 40) {
-      // down arrow
-      const documentCursor = {...this.state.documentCursor}
-
-      // move cursor down one row
-      documentCursor.row += 1
-
-      // if off bottom
-      if (documentCursor.row > documentContent.length - 1) {
-        documentCursor.row = documentContent.length - 1
-      }
-
-      // if cursor is not in bounds of new row
-      if (documentCursor.column > documentContent[documentCursor.row].length - 1) {
-        documentCursor.column = documentContent[documentCursor.row].length - 1
-      }
-
-      this.setState({ documentCursor })
-    } else if (keyCode === 38) {
-      // up arrow
-      const documentCursor = {...this.state.documentCursor}
-
-      // move cursor up one row
-      documentCursor.row -= 1
-
-      // if off top
-      if (documentCursor.row < 0) {
+      },
+      moveToTopOfDocument () {
         documentCursor.row = 0
+      },
+      moveToBottomOfDocument () {
+        documentCursor.row = documentContent.length - 1
+      },
+      moveUp () {
+        documentCursor.row -= 1
+        if (documentCursor.row < 0) {
+          documentCursor.row = 0
+        }
+        if (documentCursor.column > documentContent[documentCursor.row].length - 1) {
+          cursorController.moveToEndOfLine()
+        }
+      },
+      moveDown () {
+        documentCursor.row += 1
+        if (documentCursor.row > documentContent.length - 1) {
+          documentCursor.row = documentContent.length - 1
+        }
+        if (documentCursor.column > documentContent[documentCursor.row].length - 1) {
+          cursorController.moveToEndOfLine()
+        }
+      },
+      moveLeft () {
+        documentCursor.column -= 1
+        if (documentCursor.column < 0) {
+          if (documentCursor.row > 0) {
+            cursorController.moveUp()
+            cursorController.moveToEndOfLine()
+          } else {
+            cursorController.moveToStartOfLine()
+          }
+        }
+      },
+      moveRight () {
+        documentCursor.column += 1
+        if (documentCursor.column > documentContent[documentCursor.row].length) {
+          if (documentCursor.row < documentContent.length - 1) {
+            cursorController.moveDown()
+            cursorController.moveToStartOfLine()
+          } else {
+            cursorController.moveToEndOfLine()
+          }
+        }
       }
-
-      // if cursor is not in bounds of new row
-      if (documentCursor.column > documentContent[documentCursor.row].length - 1) {
-        documentCursor.column = documentContent[documentCursor.row].length - 1
-      }
-
-      this.setState({ documentCursor })
     }
+
+    const KEY = {
+      END: 35,
+      HOME: 36,
+      LEFT: 37,
+      RIGHT: 39,
+      UP: 38,
+      DOWN: 40
+    }
+
+    const CURSOR_KEYS = [
+      KEY.UP,
+      KEY.DOWN,
+      KEY.LEFT,
+      KEY.RIGHT
+    ]
+
+    const isKey = (keyMatch) => keyCode === keyMatch
+
+    let updateCursor = false
+
+    if (CURSOR_KEYS.indexOf(keyCode) !== -1) {
+      updateCursor = true
+    }
+
+    if (isKey(KEY.END)) {
+      event.preventDefault()
+      cursorController.moveToEndOfLine()
+    } else if (isKey(KEY.HOME)) {
+      event.preventDefault()
+      cursorController.moveToStartOfLine()
+    } else if (isKey(KEY.LEFT)) {
+      if (metaKey) {
+        cursorController.moveToStartOfLine()
+      } else {
+        cursorController.moveLeft()
+      }
+    } else if (isKey(KEY.RIGHT)) {
+      if (metaKey) {
+        cursorController.moveToEndOfLine()
+      } else {
+        cursorController.moveRight()
+      }
+    } else if (isKey(KEY.DOWN)) {
+      if (metaKey) {
+        cursorController.moveToBottomOfDocument()
+      } else {
+        cursorController.moveDown()
+      }
+    } else if (isKey(KEY.UP)) {
+      if (metaKey) {
+        cursorController.moveToTopOfDocument()
+      } else {
+        cursorController.moveUp()
+      }
+    }
+
+    const nextState = {}
+
+    if (updateCursor) {
+      nextState.documentCursor = documentCursor
+    }
+
+    this.setState(nextState)
+
 
     const props = {
       altKey,
@@ -163,14 +206,6 @@ export default class Notepad extends Component {
     report.push('}')
 
     console.log(JSON.parse(JSON.stringify(report.join(''))))
-
-
-
-    // documentContent.push(key)
-
-    // this.setState(
-    //   { documentContent }
-    // )
   }
 
   render () {
