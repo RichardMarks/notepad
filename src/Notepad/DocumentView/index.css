@@ -4,6 +4,8 @@
   font-size: 18px;
   background: white;
   cursor: text;
+  user-select: none;
+  border: 1px solid black;
 }
 
 .document-view__line-number {

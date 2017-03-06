@@ -63,9 +63,34 @@ export default class Notepad extends Component {
     this.insertCharacter = this.insertCharacter.bind(this)
     this.insertDelete = this.insertDelete.bind(this)
 
+    this.audioContext = new window.AudioContext()
+    this.audioGainNode = this.audioContext.createGain()
+    this.audioGainNode.connect(this.audioContext.destination)
+    this.audioGainNode.gain.value = 0.15
+
+    this.beep = () => {
+      const oscillator = this.audioContext.createOscillator()
+      oscillator.type = 'square'
+      oscillator.frequency.value = 120
+      oscillator.connect(this.audioGainNode)
+      oscillator.start()
+      oscillator.stop(this.audioContext.currentTime + 0.15)
+    }
+
     this.state = {
       documentCursor: CURSOR_HOME,
-      documentContent: mockData
+      documentContent: mockData,
+      documentSelection: {
+        selection: null,
+        selectionStart: {
+          row: 0,
+          column: 0
+        },
+        selectionEnd: {
+          row: 0,
+          column: 0
+        }
+      }
     }
   }
 
@@ -179,12 +204,15 @@ export default class Notepad extends Component {
       const post = rowContent.slice(documentCursor.column + 1)
       changeRow(`${pre}${post}`)
     } else {
-      if (documentContent.length > 2 && rowContent.length === 0) {
+      if (documentCursor.row === 0 && documentCursor.column === 0) {
+        this.beep()
+      } else if (documentContent.length > 1 && rowContent.length === 0) {
         documentContent.splice(documentCursor.row, 1)
         documentCursor.row -= 1
         if (documentCursor.row < 0) {
           documentCursor.row = 0
         }
+        this.moveToEndOfLine(documentCursor, documentContent)
       } else if (documentCursor.row > 0 && rowContent.length > 0) {
         documentCursor.row -= 1
         this.moveToEndOfLine(documentCursor, documentContent)
@@ -390,6 +418,7 @@ export default class Notepad extends Component {
           <div className='notepad__status-container'>
             <StatusBar
               cursor={this.state.documentCursor}
+              content={this.state.documentContent}
               {...this.props}
             />
           </div>
